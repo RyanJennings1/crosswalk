@@ -85,12 +85,44 @@ class Crosswalk(object):
     emailAddress.send_keys(email)
     print "Email address submitted"
 
+# End of Class
+
+
+def printUsage():
+  # Print when argument of '--help' is supplied
+  print '''
+Usage:
+crosswalk [parameter]
+
+Parameters:
+  [email] 	- Email that is submitted after boxes checked.
+
+Other Parameters:
+  --help	- Display this menu.
+	'''
+
+def invalidArgument():
+  print "Invalid argument supplied"
+  printUsage()
+
+def argumentHandler(arg):
+  if arg == " ":
+    invalidArgument()
+  elif arg == "--help":
+    printUsage()
+  else:
+    crosswalk = Crosswalk()
+    crosswalk.run(arg)
+  
+
+
+
 if __name__ == "__main__":
   # Entrance to the program
   if len(argv) == 1:
     print "No command line arguments specified. \nPlease enter an email address"
+    printUsage()
   elif len(argv) == 2:
-    crosswalk = Crosswalk()
-    crosswalk.run(argv[1].lower())
+    argumentHandler(argv[1].lower())
   else:
     print "Only one command line argument is supported"
