@@ -10,35 +10,29 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import requests, time
 
+version = "1.0.0"
+
 class Crosswalk(object):
-  def run(self, emailCL):
-    print "running"
-    self.openBrowser(emailCL)
+  def run(self, emailCommandLine):
+    print "Running"
+    self.openBrowser(emailCommandLine)
 
-
-  def getEmail(self):
-    # Select email address to use
-    email = raw_input("Enter email address: ")
-    return email
-
-
-  def openBrowser(self, emailCL):
-    #email = self.getEmail()
-    email = emailCL
+  def openBrowser(self, emailCommandLine):
+    email = emailCommandLine
 
     # Open up webpage using selenium
     driver = webdriver.Firefox()
     #driver = webdriver.Chrome('ChromeDriver/chromedriver')
     driver.get("http://www.crosswalk.com/newsletters/")
 
-    list1 = []
+    completedCheckboxesList = []
 
-    list2 = self.bSoup()
-    self.getCheckboxes(list1, list2)
-    self.adjustCheckboxes(list1, driver)
+    bSoupCheckboxesList = self.bSoup()
+    self.getCheckboxes(completedCheckboxesList, bSoupCheckboxesList)
+    self.adjustCheckboxes(completedCheckboxesList, driver)
     self.enterEmail(driver, email)
 
-      
+
   def bSoup(self):
     # Get the source text and create a list of 
     #   checkboxes using BeautifulSoup
@@ -46,24 +40,24 @@ class Crosswalk(object):
     source_code = requests.get(url)
     plain_text = source_code.text
     soup = BeautifulSoup(plain_text, "html.parser")
-    list2 = soup.findAll("input", {"type":"checkbox"})
-    return list2
+    bSoupCheckboxesList = soup.findAll("input", {"type":"checkbox"})
+    return bSoupCheckboxesList
 
 
-  def getCheckboxes(self, list1, list2):
-    # For each <input> create a string of the
+  def getCheckboxes(self, completedCheckboxesList, bSoupCheckboxesList):
+    # For each <input> tag create a string of the
     #   checkbox number
     for i in range(185):
-      alpha = list2[i]
-      beta = str(alpha)
-      gamma = beta[11:22]
-      list1.append(gamma)
+      checkboxContent = bSoupCheckboxesList[i]
+      checkboxContentStr = str(checkboxContent)
+      checkboxSpliced = checkboxContentStr[11:22]
+      completedCheckboxesList.append(checkboxSpliced)
 
-  def adjustCheckboxes(self, list1, driver):
+  def adjustCheckboxes(self, completedCheckboxesList, driver):
     # Adjust the checkbox number if there 
     #   is a space or quote mark in string
-    for i in range(len(list1)):
-      lst = list(list1[i])
+    for i in range(len(completedCheckboxesList)):
+      lst = list(completedCheckboxesList[i])
       for j in range(len(lst)):
         completed_item = "".join(lst)
         if completed_item[-1] == '"':
@@ -75,6 +69,7 @@ class Crosswalk(object):
         elif completed_item[-2] == ' ':
           completed_item = completed_item[0:-2]
       # Selected checkbox and click using selenium
+      print ".",
       checkbox = driver.find_element_by_id(completed_item)
       checkbox.click()
     print "Box checking complete"
@@ -98,7 +93,8 @@ Parameters:
   [email] 	- Email that is submitted after boxes checked.
 
 Other Parameters:
-  --help	- Display this menu.
+  --help		- Display this menu.
+  --v, --version	- Display version number
 	'''
 
 def invalidArgument():
@@ -110,11 +106,11 @@ def argumentHandler(arg):
     invalidArgument()
   elif arg == "--help":
     printUsage()
+  elif arg == "--v" or arg == "--version":
+    print version
   else:
     crosswalk = Crosswalk()
     crosswalk.run(arg)
-  
-
 
 
 if __name__ == "__main__":
