@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+'''
+  File: main.py
+  Author: Ryan Jennings
+'''
+
 from sys import argv
 from selenium import webdriver
 from bs4 import BeautifulSoup
