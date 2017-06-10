@@ -13,15 +13,13 @@
      `$ crosswalk test@gmail.com`
 
 # Usage
-`
-crosswalk [parameter]
+`crosswalk [parameter]
 
 Parameters:
   [email]	- Email that is submitted after boxes checked.
 
 Other Parameters:
-  --help	- Display this menu.
-`
+  --help	- Display this menu.`
 
 ## Known problems
   [Using Firefox 53](https://github.com/mozilla/geckodriver/issues/659)

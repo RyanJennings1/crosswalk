@@ -10,7 +10,7 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import requests, time
 
-version = "1.0.0"
+version = "1.0.1"
 
 class Crosswalk(object):
   def run(self, emailCommandLine):
