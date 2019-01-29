@@ -1,91 +1,97 @@
-#!/usr/bin/python
-
+#!/usr/bin/env python3
 '''
   File: main.py
   Author: Ryan Jennings
 '''
 
+import os
+
 from sys import argv
-from selenium import webdriver
+
+import requests
+
 from bs4 import BeautifulSoup
-import requests, time
+from selenium import webdriver
 
-version = "1.0.1"
+class Crosswalk:
+    """Crosswalk Object"""
+    version = "1.1.1"
+    CHROME_DRIVER_FILEPATH = os.getenv("HOME") + "/.chromedriver/chromedriver"
+    driver = webdriver.Chrome(CHROME_DRIVER_FILEPATH)
 
-class Crosswalk(object):
-  def run(self, emailCommandLine):
-    print "Running"
-    self.openBrowser(emailCommandLine)
+    def run(self, email_address):
+        """Run method"""
+        print("Running ...")
+        self.open_browser(email_address)
 
-  def openBrowser(self, emailCommandLine):
-    email = emailCommandLine
+    def open_browser(self, email_address):
+        """open browser method"""
+        # Open up webpage using selenium
+        self.driver.get("http://www.crosswalk.com/newsletters/")
 
-    # Open up webpage using selenium
-    driver = webdriver.Firefox()
-    #driver = webdriver.Chrome('ChromeDriver/chromedriver')
-    driver.get("http://www.crosswalk.com/newsletters/")
+        completed_checkboxes_list = []
 
-    completedCheckboxesList = []
+        bsoup_checkboxes_list = self.bsoup()
+        self.get_checkboxes(completed_checkboxes_list, bsoup_checkboxes_list)
+        self.adjust_checkboxes(completed_checkboxes_list)
+        self.enter_email(email_address)
 
-    bSoupCheckboxesList = self.bSoup()
-    self.getCheckboxes(completedCheckboxesList, bSoupCheckboxesList)
-    self.adjustCheckboxes(completedCheckboxesList, driver)
-    self.enterEmail(driver, email)
+    def bsoup(self):
+        """bsoup method"""
+        # Get the source text and create a list of
+        # checkboxes using BeautifulSoup
+        url = "http://www.crosswalk.com/newsletters/"
+        source_code = requests.get(url)
+        plain_text = source_code.text
+        soup = BeautifulSoup(plain_text, "html.parser")
+        bsoup_checkboxes_list = soup.findAll("input", {"type":"checkbox"})
+        return bsoup_checkboxes_list
 
+    def get_checkboxes(self, completed_checkboxes_list, bsoup_checkboxes_list):
+        """get checkboxes"""
+        # For each <input> tag create a string of the
+        # checkbox number
+        for i in range(185):
+            checkbox_content = bsoup_checkboxes_list[i]
+            checkbox_content_str = str(checkbox_content)
+            checkbox_spliced = checkbox_content_str[11:22]
+            completed_checkboxes_list.append(checkbox_spliced)
 
-  def bSoup(self):
-    # Get the source text and create a list of 
-    #   checkboxes using BeautifulSoup
-    url = "http://www.crosswalk.com/newsletters/"
-    source_code = requests.get(url)
-    plain_text = source_code.text
-    soup = BeautifulSoup(plain_text, "html.parser")
-    bSoupCheckboxesList = soup.findAll("input", {"type":"checkbox"})
-    return bSoupCheckboxesList
+    def adjust_checkboxes(self, completed_checkboxes_list):
+        """adjust checkboxes method"""
+        # Adjust the checkbox number if there
+        # is a space or quote mark in string
+        for i in range(len(completed_checkboxes_list)):
+            lst = list(completed_checkboxes_list[i])
+            for j in range(len(lst)):
+                completed_item = "".join(lst)
+                if completed_item[-1] == '"':
+                    completed_item = completed_item[0:-1]
+                elif completed_item[-2] == '"':
+                    completed_item = completed_item[0:-2]
+                elif completed_item[-1] == ' ':
+                    completed_item = completed_item[0:-1]
+                elif completed_item[-2] == ' ':
+                    completed_item = completed_item[0:-2]
+            # Selected checkbox and click using selenium
+            print(".", end='')
+            checkbox = self.driver.find_element_by_id(completed_item)
+            checkbox.click()
+        print("\nBox checking complete")
 
-
-  def getCheckboxes(self, completedCheckboxesList, bSoupCheckboxesList):
-    # For each <input> tag create a string of the
-    #   checkbox number
-    for i in range(185):
-      checkboxContent = bSoupCheckboxesList[i]
-      checkboxContentStr = str(checkboxContent)
-      checkboxSpliced = checkboxContentStr[11:22]
-      completedCheckboxesList.append(checkboxSpliced)
-
-  def adjustCheckboxes(self, completedCheckboxesList, driver):
-    # Adjust the checkbox number if there 
-    #   is a space or quote mark in string
-    for i in range(len(completedCheckboxesList)):
-      lst = list(completedCheckboxesList[i])
-      for j in range(len(lst)):
-        completed_item = "".join(lst)
-        if completed_item[-1] == '"':
-          completed_item = completed_item[0:-1]
-        elif completed_item[-2] == '"':
-          completed_item = completed_item[0:-2]
-        elif completed_item[-1] == ' ':
-          completed_item = completed_item[0:-1]
-        elif completed_item[-2] == ' ':
-          completed_item = completed_item[0:-2]
-      # Selected checkbox and click using selenium
-      print ".",
-      checkbox = driver.find_element_by_id(completed_item)
-      checkbox.click()
-    print "Box checking complete"
-
-  def enterEmail(self, driver, email):
-    # Select and print email using selenium
-    emailAddress = driver.find_element_by_class_name("emailAddress")
-    emailAddress.send_keys(email)
-    print "Email address submitted"
+    def enter_email(self, email):
+        """enter email"""
+        # Select and print email using selenium
+        email_address = self.driver.find_element_by_class_name("emailAddress")
+        email_address.send_keys(email)
+        print("Email address submitted")
 
 # End of Class
 
-
-def printUsage():
-  # Print when argument of '--help' is supplied
-  print '''
+def print_usage():
+    """print usage method"""
+    # Print when argument of '--help' is supplied
+    print('''
 Usage:
 crosswalk [parameter]
 
@@ -95,30 +101,30 @@ Parameters:
 Other Parameters:
   --help		- Display this menu.
   --v, --version	- Display version number
-	'''
+	''')
 
-def invalidArgument():
-  print "Invalid argument supplied"
-  printUsage()
+def invalid_argument():
+    """invalid argument method"""
+    print("Invalid argument supplied")
+    print_usage()
 
-def argumentHandler(arg):
-  if arg == " ":
-    invalidArgument()
-  elif arg == "--help":
-    printUsage()
-  elif arg == "--v" or arg == "--version":
-    print version
-  else:
+def argument_handler(arg):
+    """argument handler"""
     crosswalk = Crosswalk()
-    crosswalk.run(arg)
-
+    if arg == " ":
+        invalid_argument()
+    elif arg == "--help":
+        print_usage()
+    elif arg in ("--v", "--version"):
+        print(crosswalk.version)
+    else:
+        crosswalk.run(email_address=arg)
 
 if __name__ == "__main__":
-  # Entrance to the program
-  if len(argv) == 1:
-    print "No command line arguments specified. \nPlease enter an email address"
-    printUsage()
-  elif len(argv) == 2:
-    argumentHandler(argv[1].lower())
-  else:
-    print "Only one command line argument is supported"
+    if len(argv) == 1:
+        print("No command line arguments specified. \nPlease enter an email address")
+        print_usage()
+    elif len(argv) == 2:
+        argument_handler(argv[1].lower())
+    else:
+        print("Only one command line argument is supported")
